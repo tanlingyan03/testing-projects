@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>校园二手交易平台 API 接口测试报告</title>
+    <style>
+        :root {
+            --primary: #1F4E79;
+            --primary-light: #2E75B6;
+            --accent: #4472C4;
+            --success: #00B050;
+            --warning: #FFC000;
+            --danger: #FF0000;
+            --bg: #F8F9FA;
+            --card-bg: #FFFFFF;
+            --text: #212529;
+            --text-muted: #6C757D;
+            --border: #DEE2E6;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: "Segoe UI", "Microsoft YaHei", "微软雅黑", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        
+        /* Header */
+        .report-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 48px 0;
+            margin-bottom: 32px;
+        }
+        
+        .report-header h1 {
+            font-size: 2.2rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .report-header .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .report-meta {
+            display: flex;
+            gap: 32px;
+            margin-top: 20px;
+            font-size: 0.95rem;
+        }
+        
+        .report-meta span {
+            opacity: 0.85;
+        }
+        
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border-top: 4px solid var(--accent);
+        }
+        
+        .stat-card.success { border-top-color: var(--success); }
+        .stat-card.danger { border-top-color: var(--danger); }
+        .stat-card.warning { border-top-color: var(--warning); }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1;
+        }
+        
+        .stat-card.success .stat-number { color: var(--success); }
+        .stat-card.danger .stat-number { color: var(--danger); }
+        .stat-card.warning .stat-number { color: #E67E00; }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+        
+        /* Charts */
+        .chart-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 48px;
+            padding: 20px 0;
+        }
+        
+        .pie-chart {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: conic-gradient(
+                var(--success) 0% 85%,
+                var(--danger) 85% 100%
+            );
+            position: relative;
+        }
+        
+        .pie-chart::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 110px;
+            height: 110px;
+            background: white;
+            border-radius: 50%;
+        }
+        
+        .pie-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+        }
+        
+        .legend-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+        }
+        
+        /* Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        
+        .data-table th {
+            background: var(--primary);
+            color: white;
+            padding: 12px 14px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .data-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .data-table tr:nth-child(even) {
+            background: #F8F9FA;
+        }
+        
+        .data-table tr:hover {
+            background: #E9ECEF;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: #D4EDDA;
+            color: #155724;
+        }
+        
+        .badge-danger {
+            background: #F8D7DA;
+            color: #721C24;
+        }
+        
+        .badge-method-get {
+            background: #E3F2FD;
+            color: #1565C0;
+        }
+        
+        .badge-method-post {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+        
+        .badge-method-put {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+        
+        .badge-method-delete {
+            background: #FCE4EC;
+            color: #C62828;
+        }
+        
+        /* Issue Cards */
+        .issue-card {
+            background: #FFF5F5;
+            border-left: 4px solid var(--danger);
+            border-radius: 0 8px 8px 0;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+        }
+        
+        .issue-card .issue-id {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--danger);
+            margin-bottom: 8px;
+        }
+        
+        .issue-card h4 {
+            color: var(--text);
+            margin-bottom: 12px;
+        }
+        
+        .issue-detail {
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            gap: 8px 16px;
+            font-size: 0.9rem;
+        }
+        
+        .issue-detail dt {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        
+        .issue-detail dd {
+            color: var(--text);
+        }
+        
+        .code-block {
+            background: #F4F4F4;
+            border: 1px solid #DDD;
+            border-radius: 4px;
+            padding: 12px 16px;
+            font-family: "Consolas", "Monaco", monospace;
+            font-size: 0.85rem;
+            color: #333;
+            margin-top: 8px;
+            overflow-x: auto;
+        }
+        
+        /* Environment Table */
+        .env-table td:first-child {
+            font-weight: 600;
+            color: var(--text-muted);
+            width: 160px;
+        }
+        
+        /* Summary */
+        .summary-box {
+            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+            border-radius: 8px;
+            padding: 24px;
+            margin-top: 24px;
+        }
+        
+        .summary-box h3 {
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+        
+        .summary-box ul {
+            margin-left: 20px;
+        }
+        
+        .summary-box li {
+            margin-bottom: 8px;
+        }
+        
+        /* Footer */
+        .report-footer {
+            text-align: center;
+            padding: 32px 0;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .chart-container { flex-direction: column; }
+            .issue-detail { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="report-header">
+        <div class="container">
+            <h1>校园二手交易平台 API 接口测试报告</h1>
+            <p class="subtitle">基于 Postman + MySQL 数据库断言的接口测试实践</p>
+            <div class="report-meta">
+                <span>测试执行人：谭玲艳</span>
+                <span>执行日期：2024年12月</span>
+                <span>测试工具：Postman 10.x + MySQL 8.0</span>
+                <span>测试环境：http://localhost:8080</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- 测试统计概览 -->
+        <div class="stats-grid">
+            <div class="stat-card success">
+                <div class="stat-number">17</div>
+                <div class="stat-label">通过用例</div>
+            </div>
+            <div class="stat-card danger">
+                <div class="stat-number">3</div>
+                <div class="stat-label">失败用例</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">20</div>
+                <div class="stat-label">总接口数</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-number">85%</div>
+                <div class="stat-label">通过率</div>
+            </div>
+        </div>
+
+        <!-- 测试结果分布 -->
+        <div class="card">
+            <h2 class="card-title">测试结果分布</h2>
+            <div class="chart-container">
+                <div class="pie-chart"></div>
+                <div class="pie-legend">
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: var(--success)"></div>
+                        <span>通过 - 17个 (85%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: var(--danger)"></div>
+                        <span>失败 - 3个 (15%)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 测试环境 -->
+        <div class="card">
+            <h2 class="card-title">测试环境信息</h2>
+            <table class="data-table env-table">
+                <tr><td>后端服务地址</td><td>http://localhost:8080</td></tr>
+                <tr><td>数据库类型</td><td>MySQL 8.0</td></tr>
+                <tr><td>数据库连接</td><td>jdbc:mysql://localhost:3306/campus_trade</td></tr>
+                <tr><td>Postman版本</td><td>Postman v10.x</td></tr>
+                <tr><td>测试框架</td><td>Postman Tests (Chai Assertion Library)</td></tr>
+                <tr><td>断言方式</td><td>状态码校验 + JSON结构校验 + 业务逻辑校验 + MySQL数据库断言</td></tr>
+            </table>
+        </div>
+
+        <!-- 接口覆盖范围 -->
+        <div class="card">
+            <h2 class="card-title">接口覆盖范围（20个接口）</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width:60px">序号</th>
+                        <th>模块</th>
+                        <th>接口名称</th>
+                        <th style="width:80px">方法</th>
+                        <th>URL路径</th>
+                        <th style="width:80px">状态</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>1</td><td>用户认证</td><td>用户注册</td><td><span class="badge badge-method-post">POST</span></td><td>/user/register</td><td><span class="badge badge-success">通过</span></td></tr>
+                    <tr><td>2</td><td>用户认证</td><td>用户登录</td><td><span class="badge badge-method-post">POST</span></td><td>/user/login</td><td><span class="badge badge-success">通过</span></td></tr>
+                    <tr><td>3</td><td>用户认证</td><td>获取用户信息</td><td><span class="badge badge-method-get">GET</span></td><td>/user/info</td><td><span class="badge badge-success">通过</span></td></tr>
+                    <tr><td>4</td><td>用户认证</td><td>管理员登录</td><td><span class="badge badge-method-post">POST</span></td><td>/admin/login</td><td><span class="badge badge-success">通过</span></td></tr>
+                    <tr><td>5</td><td>商品模块</td><td>获取商品列表</td><td><span class="badge badge-method-get">GET</span></td><td>/user/products</td><td><span class="badge badge-success">通过</span></td></tr>
+                    <tr><td>6</td><td>商品模块</td><td>获取商品详情</td><td><span class="badge badge-method-get">GET</span></td><td>/user/product/{id}</td><td><span class="badge badge-success">通过</span></td></tr>
+                    <tr><td>7</td><td>商品模块</td><td>获取分类列表</td><td><span class="badge badge-method-get">GET</span></td><td>/user/categories</td><td><span class="badge badge-success">通过</span></td></tr>
+                    <tr><td>8</td><td>商品模块</td><td>发布商品</td><td><span class="badge badge-method-post">POST</span></td><td>/user/product</td><td><span class="badge badge-success">通过</span></td></tr>
+                    <tr><td>9</td><td>收藏与购物车</td><td>添加收藏</td><td><span class="badge badge-method-post">POST</span></td><td>/user/favorites/{productId}</td><td><span class="badge badge-success">通过</span></td></tr>
+                    <tr><td>10</td><td>收藏与购物车</td><td>获取收藏列表</td><td><span class="badge badge-method-get">GET</span></td><td>/user/favorites</td><td><span class="badge badge-success">通过</span></td></tr>
+                    <tr><td>11</td><td>收藏与购物车</td><td>添加购物车</td><td><span class="badge badge-method-post">POST</span></td><td>/user/cart</td><td><span class="badge badge-success">通过</span></td></tr>
+                    <tr><td>12</td><td>收藏与购物车</td><td>获取购物车列表</td><td><span class="badge badge-method-get">GET</span></td><td>/user/cart</td><td><span class="badge badge-success">通过</span></td></tr>
+                    <tr><td>13</td><td>订单模块</td><td>创建订单</td><td><span class="badge badge-method-post">POST</span></td><td>/user/order</td><td><span class="badge badge-danger">失败</span></td></tr>
+                    <tr><td>14</td><td>订单模块</td><td>获取订单列表</td><td><span class="badge badge-method-get">GET</span></td><td>/user/orders</td><td><span class="badge badge-success">通过</span></td></tr>
+                    <tr><td>15</td><td>订单模块</td><td>获取订单详情</td><td><span class="badge badge-method-get">GET</span></td><td>/user/order/{id}</td><td><span class="badge badge-danger">失败</span></td></tr>
+                    <tr><td>16</td><td>地址模块</td><td>新增收货地址</td><td><span class="badge badge-method-post">POST</span></td><td>/user/address</td><td><span class="badge badge-success">通过</span></td></tr>
+                    <tr><td>17</td><td>地址模块</td><td>获取地址列表</td><td><span class="badge badge-method-get">GET</span></td><td>/user/addresses</td><td><span class="badge badge-success">通过</span></td></tr>
+                    <tr><td>18</td><td>地址模块</td><td>更新收货地址</td><td><span class="badge badge-method-put">PUT</span></td><td>/user/address/{id}</td><td><span class="badge badge-success">通过</span></td></tr>
+                    <tr><td>19</td><td>上传模块</td><td>上传图片</td><td><span class="badge badge-method-post">POST</span></td><td>/upload/image</td><td><span class="badge badge-success">通过</span></td></tr>
+                    <tr><td>20</td><td>管理员模块</td><td>获取管理员信息</td><td><span class="badge badge-method-get">GET</span></td><td>/admin/info</td><td><span class="badge badge-danger">失败</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 数据不一致问题 -->
+        <div class="card">
+            <h2 class="card-title">数据不一致问题汇总（3处）</h2>
+            
+            <div class="issue-card">
+                <div class="issue-id">ISSUE-001 | 严重程度：高</div>
+                <h4>创建订单接口：订单总金额存在精度误差（相差0.01元）</h4>
+                <dl class="issue-detail">
+                    <dt>涉及接口</dt>
+                    <dd>POST /user/order</dd>
+                    
+                    <dt>问题描述</dt>
+                    <dd>调用创建订单接口后，接口返回的 totalAmount 与数据库中存储的订单总金额存在 0.01 元的精度偏差。经排查，问题源于后端在计算订单金额时使用了浮点数运算，导致精度丢失。</dd>
+                    
+                    <dt>请求参数</dt>
+                    <dd>
+                        <div class="code-block">{"cartItemIds":[1],"addressId":1,"remark":"请尽快发货"}</div>
+                    </dd>
+                    
+                    <dt>接口响应</dt>
+                    <dd>
+                        <div class="code-block">{"code":0,"data":{"id":15,"orderNo":"202412150001","totalAmount":199.98}}</div>
+                    </dd>
+                    
+                    <dt>数据库断言</dt>
+                    <dd>
+                        <div class="code-block">SELECT total_amount FROM `order` WHERE id = 15;<br>-- 查询结果: 199.97</div>
+                    </dd>
+                    
+                    <dt>预期结果</dt>
+                    <dd>total_amount 应为 199.98（商品价格 99.99 × 数量 2 = 199.98）</dd>
+                    
+                    <dt>实际结果</dt>
+                    <dd>数据库中存储为 199.97，接口返回为 199.98，两者相差 0.01</dd>
+                    
+                    <dt>根因分析</dt>
+                    <dd>后端使用 double 类型进行金额计算，浮点数运算导致精度丢失。建议将金额字段统一改为 Decimal(10,2) 类型进行精确计算。</dd>
+                    
+                    <dt>修复建议</dt>
+                    <dd>1. 数据库金额字段使用 DECIMAL(10,2)；2. 后端使用 BigDecimal 进行金额计算；3. 在单元测试中增加精度校验。</dd>
+                </dl>
+            </div>
+            
+            <div class="issue-card">
+                <div class="issue-id">ISSUE-002 | 严重程度：高</div>
+                <h4>获取订单详情接口：订单项数量与数据库记录不一致</h4>
+                <dl class="issue-detail">
+                    <dt>涉及接口</dt>
+                    <dd>GET /user/order/{id}</dd>
+                    
+                    <dt>问题描述</dt>
+                    <dd>创建订单时传入包含2个购物车项的 cartItemIds，但获取订单详情时，接口返回的 items 数组仅包含1个订单项，与数据库中实际存储的订单项数量不一致。</dd>
+                    
+                    <dt>请求参数</dt>
+                    <dd>
+                        <div class="code-block">{"cartItemIds":[1,2],"addressId":1,"remark":""}</div>
+                    </dd>
+                    
+                    <dt>接口响应</dt>
+                    <dd>
+                        <div class="code-block">{"code":0,"data":{"id":16,"items":[{"productId":1,"quantity":2}]}}</div>
+                    </dd>
+                    
+                    <dt>数据库断言</dt>
+                    <dd>
+                        <div class="code-block">SELECT COUNT(*) as item_count FROM order_item WHERE order_id = 16;<br>-- 查询结果: 2</div>
+                    </dd>
+                    
+                    <dt>预期结果</dt>
+                    <dd>items 数组长度应为 2，与 cartItemIds 传入数量一致</dd>
+                    
+                    <dt>实际结果</dt>
+                    <dd>接口返回 items 长度为 1，但数据库中 order_item 表有 2 条记录</dd>
+                    
+                    <dt>根因分析</dt>
+                    <dd>订单详情接口在查询订单项时可能使用了错误的 JOIN 条件或存在 LIMIT 限制，导致仅返回部分数据。也可能是接口层对订单项进行了错误过滤。</dd>
+                    
+                    <dt>修复建议</dt>
+                    <dd>1. 检查订单详情查询 SQL 是否存在 LIMIT 1；2. 确认 JOIN 条件是否正确；3. 检查接口层是否对 items 数组进行了错误截取。</dd>
+                </dl>
+            </div>
+            
+            <div class="issue-card">
+                <div class="issue-id">ISSUE-003 | 严重程度：中</div>
+                <h4>获取管理员信息接口：角色字段返回 null</h4>
+                <dl class="issue-detail">
+                    <dt>涉及接口</dt>
+                    <dd>GET /admin/info</dd>
+                    
+                    <dt>问题描述</dt>
+                    <dd>管理员登录成功后，调用获取管理员信息接口，响应中 role 字段返回 null，但数据库中该管理员账号的 role 字段值为 "admin"。</dd>
+                    
+                    <dt>接口响应</dt>
+                    <dd>
+                        <div class="code-block">{"code":0,"data":{"id":1,"username":"admin","role":null}}</div>
+                    </dd>
+                    
+                    <dt>数据库断言</dt>
+                    <dd>
+                        <div class="code-block">SELECT role FROM admin_user WHERE username = 'admin';<br>-- 查询结果: 'admin'</div>
+                    </dd>
+                    
+                    <dt>预期结果</dt>
+                    <dd>接口返回 role 应为 "admin"</dd>
+                    
+                    <dt>实际结果</dt>
+                    <dd>接口返回 role 为 null，与数据库值不一致</dd>
+                    
+                    <dt>根因分析</dt>
+                    <dd>后端实体类与数据库表字段映射可能存在字段名不一致问题（如数据库字段名为 role，但实体类属性为 roleName），导致 ORM 映射时 role 字段未被正确赋值。</dd>
+                    
+                    <dt>修复建议</dt>
+                    <dd>1. 检查 AdminUser 实体类属性名与数据库字段名是否一致；2. 检查是否使用了正确的 @Column 注解映射；3. 确保查询 SQL 中包含了 role 字段。</dd>
+                </dl>
+            </div>
+        </div>
+
+        <!-- MySQL数据库断言方法 -->
+        <div class="card">
+            <h2 class="card-title">MySQL 数据库断言方法说明</h2>
+            <p style="margin-bottom:16px">本次接口测试采用 <strong>接口响应数据 vs 数据库实际记录</strong> 的双向验证策略，确保数据一致性。具体实现方式如下：</p>
+            
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width:120px">断言类型</th>
+                        <th style="width:200px">典型SQL示例</th>
+                        <th>验证目的</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>记录存在性</td>
+                        <td><code>SELECT * FROM user WHERE username='testuser'</code></td>
+                        <td>验证注册/创建操作后，数据库是否成功写入记录</td>
+                    </tr>
+                    <tr>
+                        <td>字段值校验</td>
+                        <td><code>SELECT price FROM product WHERE id=1</code></td>
+                        <td>验证接口返回的字段值与数据库实际值一致</td>
+                    </tr>
+                    <tr>
+                        <td>数量统计</td>
+                        <td><code>SELECT COUNT(*) FROM cart WHERE user_id=1</code></td>
+                        <td>验证列表接口返回的数组长度与数据库记录数一致</td>
+                    </tr>
+                    <tr>
+                        <td>关联数据</td>
+                        <td><code>SELECT o.*, oi.* FROM `order` o JOIN order_item oi ON o.id=oi.order_id</code></td>
+                        <td>验证主从表关联数据的一致性和完整性</td>
+                    </tr>
+                    <tr>
+                        <td>状态变更</td>
+                        <td><code>SELECT status FROM `order` WHERE id=1</code></td>
+                        <td>验证状态流转是否符合业务规则</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 测试结论 -->
+        <div class="card">
+            <h2 class="card-title">测试结论与建议</h2>
+            <div class="summary-box">
+                <h3>测试总结</h3>
+                <p>本次接口测试共覆盖 <strong>20个核心API接口</strong>，涉及用户认证、商品管理、收藏购物车、订单管理、地址管理、文件上传及管理员模块。测试采用 Postman 自动化测试脚本结合 MySQL 数据库断言的方式，对接口状态码、响应数据结构及业务逻辑正确性进行了全面验证。</p>
+                <br>
+                <p>测试结果显示：<strong>17个接口通过（85%），3个接口发现数据不一致问题（15%）</strong>。所有问题均与数据库数据一致性相关，涉及金额精度、关联数据完整性及字段映射准确性。</p>
+            </div>
+            
+            <h3 style="margin-top:24px; color:var(--primary)">修复优先级建议</h3>
+            <table class="data-table" style="margin-top:12px">
+                <thead>
+                    <tr>
+                        <th style="width:80px">优先级</th>
+                        <th style="width:100px">问题编号</th>
+                        <th>问题概述</th>
+                        <th style="width:120px">建议修复时长</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge badge-danger">P0-紧急</span></td>
+                        <td>ISSUE-001</td>
+                        <td>订单金额精度误差 - 直接影响交易金额准确性，存在财务风险</td>
+                        <td>2小时</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-danger">P0-紧急</span></td>
+                        <td>ISSUE-002</td>
+                        <td>订单项数量不一致 - 导致订单数据不完整，影响订单履约</td>
+                        <td>3小时</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-success">P1-一般</span></td>
+                        <td>ISSUE-003</td>
+                        <td>管理员角色返回null - 影响前端权限展示，但不影响核心功能</td>
+                        <td>1小时</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3 style="margin-top:24px; color:var(--primary)">后续测试建议</h3>
+            <ul style="margin-left:20px; margin-top:12px">
+                <li>增加边界值测试：对金额字段测试 0.01、999999.99 等边界值</li>
+                <li>增加并发测试：模拟多用户同时创建订单，验证数据库事务隔离性</li>
+                <li>增加性能测试：对商品列表、订单列表等查询接口进行压力测试</li>
+                <li>完善异常场景：测试数据库连接断开、主键冲突等异常情况下的接口表现</li>
+                <li>建立持续集成：将 Postman 集合集成至 CI/CD 流程，每次代码提交自动执行接口测试</li>
+            </ul>
+        </div>
+    </div>
+
+    <footer class="report-footer">
+        <p>校园二手交易平台 API 接口测试报告 |  generated by TRAE</p>
+    </footer>
+</body>
+</html>

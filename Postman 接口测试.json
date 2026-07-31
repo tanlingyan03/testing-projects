@@ -1,0 +1,936 @@
+{
+  "info": {
+    "_postman_id": "campus-trade-api-test-2024",
+    "name": "CampusTrade API 接口测试",
+    "description": "校园二手交易平台API接口测试集合，覆盖用户注册、商品发布、订单创建等20个核心接口，包含状态码校验、响应结构断言及业务逻辑验证。",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01-用户认证",
+      "item": [
+        {
+          "name": "TC-001 用户注册",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": {
+              "raw": "{{base_url}}/user/register",
+              "host": ["{{base_url}}"],
+              "path": ["user", "register"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser_{{$timestamp}}\",\n  \"password\": \"test123456\",\n  \"confirmPassword\": \"test123456\",\n  \"phone\": \"13800138000\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 状态码校验",
+                  "pm.test('状态码应为200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// 响应结构校验",
+                  "pm.test('响应应包含code和data字段', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData).to.have.property('code');",
+                  "  pm.expect(jsonData).to.have.property('data');",
+                  "});",
+                  "",
+                  "// 业务逻辑校验",
+                  "pm.test('注册成功code应为0', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.code).to.eql(0);",
+                  "});",
+                  "",
+                  "// 保存注册用户名供后续使用",
+                  "var reqBody = JSON.parse(pm.request.body.raw);",
+                  "pm.environment.set('registered_username', reqBody.username);",
+                  "pm.environment.set('registered_password', reqBody.password);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-002 用户登录",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": {
+              "raw": "{{base_url}}/user/login",
+              "host": ["{{base_url}}"],
+              "path": ["user", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{registered_username}}\",\n  \"password\": \"{{registered_password}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('状态码应为200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('响应应包含token', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.data).to.have.property('token');",
+                  "  pm.expect(jsonData.data.token).to.be.a('string').and.not.empty;",
+                  "});",
+                  "",
+                  "pm.test('登录成功code应为0', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.code).to.eql(0);",
+                  "});",
+                  "",
+                  "// 保存token",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set('user_token', jsonData.data.token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-003 获取用户信息",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{user_token}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/info",
+              "host": ["{{base_url}}"],
+              "path": ["user", "info"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('状态码应为200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('响应应包含用户基本信息', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.data).to.have.property('username');",
+                  "  pm.expect(jsonData.data).to.have.property('phone');",
+                  "});",
+                  "",
+                  "pm.test('用户名应与注册时一致', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.data.username).to.eql(pm.environment.get('registered_username'));",
+                  "});",
+                  "",
+                  "pm.test('code应为0', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.code).to.eql(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-004 管理员登录",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": {
+              "raw": "{{base_url}}/admin/login",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('状态码应为200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('响应应包含token', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.data).to.have.property('token');",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set('admin_token', jsonData.data.token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02-商品模块",
+      "item": [
+        {
+          "name": "TC-005 获取商品列表",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/user/products?page=1&size=10",
+              "host": ["{{base_url}}"],
+              "path": ["user", "products"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "size", "value": "10"}
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('状态码应为200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('响应应为数组或分页对象', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.data).to.be.an('object');",
+                  "  pm.expect(jsonData.data).to.have.property('list');",
+                  "});",
+                  "",
+                  "pm.test('商品列表项应包含必要字段', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  if (jsonData.data.list && jsonData.data.list.length > 0) {",
+                  "    var item = jsonData.data.list[0];",
+                  "    pm.expect(item).to.have.property('id');",
+                  "    pm.expect(item).to.have.property('title');",
+                  "    pm.expect(item).to.have.property('price');",
+                  "  }",
+                  "});",
+                  "",
+                  "// 保存第一个商品ID",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data.list && jsonData.data.list.length > 0) {",
+                  "  pm.environment.set('product_id', jsonData.data.list[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-006 获取商品详情",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/user/product/{{product_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["user", "product", "{{product_id}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('状态码应为200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('商品详情应包含完整字段', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  var data = jsonData.data;",
+                  "  pm.expect(data).to.have.property('id');",
+                  "  pm.expect(data).to.have.property('title');",
+                  "  pm.expect(data).to.have.property('price');",
+                  "  pm.expect(data).to.have.property('description');",
+                  "  pm.expect(data).to.have.property('images');",
+                  "});",
+                  "",
+                  "pm.test('返回的商品ID应一致', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.data.id.toString()).to.eql(pm.environment.get('product_id'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-007 获取分类列表",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/user/categories",
+              "host": ["{{base_url}}"],
+              "path": ["user", "categories"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('状态码应为200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('响应应为数组', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.data).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('分类项应包含id和name', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  if (jsonData.data.length > 0) {",
+                  "    var cat = jsonData.data[0];",
+                  "    pm.expect(cat).to.have.property('id');",
+                  "    pm.expect(cat).to.have.property('name');",
+                  "  }",
+                  "});",
+                  "",
+                  "// 保存第一个分类ID",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data.length > 0) {",
+                  "  pm.environment.set('category_id', jsonData.data[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-008 发布商品",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{user_token}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/product",
+              "host": ["{{base_url}}"],
+              "path": ["user", "product"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"测试商品_{{$timestamp}}\",\n  \"description\": \"这是一个接口测试发布的商品\",\n  \"price\": 99.99,\n  \"originalPrice\": 199.99,\n  \"categoryId\": {{category_id}},\n  \"images\": [\"https://example.com/test.jpg\"],\n  \"condition\": \"九成新\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('状态码应为200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('发布成功code应为0', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.code).to.eql(0);",
+                  "});",
+                  "",
+                  "pm.test('响应应包含商品ID', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.data).to.have.property('id');",
+                  "});",
+                  "",
+                  "// 保存发布的商品ID",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set('published_product_id', jsonData.data.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03-收藏与购物车",
+      "item": [
+        {
+          "name": "TC-009 添加收藏",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{user_token}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/favorites/{{product_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["user", "favorites", "{{product_id}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('状态码应为200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('收藏成功code应为0', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.code).to.eql(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-010 获取收藏列表",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{user_token}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/favorites",
+              "host": ["{{base_url}}"],
+              "path": ["user", "favorites"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('状态码应为200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('响应应为数组', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.data).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('收藏列表应包含刚添加的商品', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  var productId = pm.environment.get('product_id');",
+                  "  var found = jsonData.data.some(function(item) {",
+                  "    return item.id.toString() === productId;",
+                  "  });",
+                  "  pm.expect(found).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-011 添加购物车",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{user_token}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/cart",
+              "host": ["{{base_url}}"],
+              "path": ["user", "cart"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": {{product_id}},\n  \"quantity\": 2\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('状态码应为200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('添加成功code应为0', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.code).to.eql(0);",
+                  "});",
+                  "",
+                  "pm.test('响应应包含购物车项ID', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.data).to.have.property('id');",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set('cart_item_id', jsonData.data.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-012 获取购物车列表",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{user_token}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/cart",
+              "host": ["{{base_url}}"],
+              "path": ["user", "cart"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('状态码应为200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('响应应为数组', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.data).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('购物车应包含刚添加的商品且数量正确', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  var cartItemId = pm.environment.get('cart_item_id');",
+                  "  var found = jsonData.data.find(function(item) {",
+                  "    return item.id.toString() === cartItemId;",
+                  "  });",
+                  "  pm.expect(found).to.not.be.undefined;",
+                  "  pm.expect(found.quantity).to.eql(2);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04-订单模块",
+      "item": [
+        {
+          "name": "TC-013 创建订单",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{user_token}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/order",
+              "host": ["{{base_url}}"],
+              "path": ["user", "order"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cartItemIds\": [{{cart_item_id}}],\n  \"addressId\": {{address_id}},\n  \"remark\": \"请尽快发货\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('状态码应为200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('创建成功code应为0', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.code).to.eql(0);",
+                  "});",
+                  "",
+                  "pm.test('响应应包含订单ID和订单号', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.data).to.have.property('id');",
+                  "  pm.expect(jsonData.data).to.have.property('orderNo');",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set('order_id', jsonData.data.id);",
+                  "pm.environment.set('order_no', jsonData.data.orderNo);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-014 获取订单列表",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{user_token}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/orders?page=1&size=10",
+              "host": ["{{base_url}}"],
+              "path": ["user", "orders"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "size", "value": "10"}
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('状态码应为200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('响应应为分页对象', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.data).to.have.property('list');",
+                  "  pm.expect(jsonData.data).to.have.property('total');",
+                  "});",
+                  "",
+                  "pm.test('订单列表应包含刚创建的订单', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  var orderNo = pm.environment.get('order_no');",
+                  "  var found = jsonData.data.list.some(function(item) {",
+                  "    return item.orderNo === orderNo;",
+                  "  });",
+                  "  pm.expect(found).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-015 获取订单详情",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{user_token}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/order/{{order_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["user", "order", "{{order_id}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('状态码应为200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('订单详情应包含完整信息', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  var data = jsonData.data;",
+                  "  pm.expect(data).to.have.property('id');",
+                  "  pm.expect(data).to.have.property('orderNo');",
+                  "  pm.expect(data).to.have.property('totalAmount');",
+                  "  pm.expect(data).to.have.property('status');",
+                  "  pm.expect(data).to.have.property('items');",
+                  "});",
+                  "",
+                  "pm.test('订单号应一致', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.data.orderNo).to.eql(pm.environment.get('order_no'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05-地址模块",
+      "item": [
+        {
+          "name": "TC-016 新增收货地址",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{user_token}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/address",
+              "host": ["{{base_url}}"],
+              "path": ["user", "address"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiverName\": \"张三\",\n  \"receiverPhone\": \"13800138001\",\n  \"province\": \"湖北省\",\n  \"city\": \"武汉市\",\n  \"district\": \"洪山区\",\n  \"detailAddress\": \"珞喻路123号\",\n  \"isDefault\": true\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('状态码应为200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('添加成功code应为0', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.code).to.eql(0);",
+                  "});",
+                  "",
+                  "pm.test('响应应包含地址ID', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.data).to.have.property('id');",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set('address_id', jsonData.data.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-017 获取地址列表",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{user_token}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/addresses",
+              "host": ["{{base_url}}"],
+              "path": ["user", "addresses"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('状态码应为200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('响应应为数组', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.data).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('地址列表应包含刚添加的地址', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  var addressId = pm.environment.get('address_id');",
+                  "  var found = jsonData.data.some(function(item) {",
+                  "    return item.id.toString() === addressId;",
+                  "  });",
+                  "  pm.expect(found).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-018 更新收货地址",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{user_token}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/address/{{address_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["user", "address", "{{address_id}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiverName\": \"李四\",\n  \"receiverPhone\": \"13800138002\",\n  \"province\": \"湖北省\",\n  \"city\": \"武汉市\",\n  \"district\": \"武昌区\",\n  \"detailAddress\": \"中南路456号\",\n  \"isDefault\": false\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('状态码应为200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('更新成功code应为0', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.code).to.eql(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06-上传与管理",
+      "item": [
+        {
+          "name": "TC-019 上传图片",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{user_token}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}/upload/image",
+              "host": ["{{base_url}}"],
+              "path": ["upload", "image"]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {"key": "file", "type": "file", "src": "/C:/test/image.jpg"},
+                {"key": "dir", "value": "products", "type": "text"}
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('状态码应为200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('上传成功code应为0', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.code).to.eql(0);",
+                  "});",
+                  "",
+                  "pm.test('响应应包含图片URL', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.data).to.have.property('url');",
+                  "  pm.expect(jsonData.data.url).to.be.a('string').and.not.empty;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-020 获取管理员信息",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{admin_token}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/info",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "info"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('状态码应为200', function() {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('响应应包含管理员信息', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.data).to.have.property('username');",
+                  "  pm.expect(jsonData.data).to.have.property('role');",
+                  "});",
+                  "",
+                  "pm.test('管理员角色应为admin', function() {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.expect(jsonData.data.role).to.eql('admin');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// 集合级别前置脚本：初始化时间戳等公共变量",
+          "pm.globals.set('test_run_timestamp', new Date().toISOString());"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// 集合级别测试脚本：记录响应时间",
+          "pm.test('响应时间应小于2000ms', function() {",
+          "  pm.expect(pm.response.responseTime).to.be.below(2000);",
+          "});",
+          "",
+          "// 统一响应头校验",
+          "pm.test('Content-Type应为application/json', function() {",
+          "  pm.response.to.have.header('Content-Type');",
+          "  pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {"key": "base_url", "value": "http://localhost:8080", "type": "string"},
+    {"key": "user_token", "value": "", "type": "string"},
+    {"key": "admin_token", "value": "", "type": "string"},
+    {"key": "product_id", "value": "", "type": "string"},
+    {"key": "published_product_id", "value": "", "type": "string"},
+    {"key": "category_id", "value": "", "type": "string"},
+    {"key": "cart_item_id", "value": "", "type": "string"},
+    {"key": "order_id", "value": "", "type": "string"},
+    {"key": "order_no", "value": "", "type": "string"},
+    {"key": "address_id", "value": "", "type": "string"},
+    {"key": "registered_username", "value": "", "type": "string"},
+    {"key": "registered_password", "value": "", "type": "string"}
+  ]
+}
